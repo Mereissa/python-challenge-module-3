@@ -1,60 +1,60 @@
 import os
 import csv
 
-# Path to collect data from the Resources folder
+# file Path to collect data
 file_path = 'resources\election_data.csv'
 
-# Replace this string with your actual CSV content
-data_string = """
-Ballot ID,County,Candidate
-1323913,Jefferson,Charles Casper Stockham
-... (other rows omitted for brevity) ...
-1640901,Jefferson,Charles Casper Stockham
-"""
+# hold the number of votes for each candidate
+candidate_votes = {}
 
-# Convert the string to a file-like object
-data = StringIO(data_string)
+#variable to hold the total number of votes
+total_votes = 0
 
-# Read the data into memory
-reader = csv.DictReader(data)
+#output file
+output_dir = os.path.join('analysis')
+if not os.path.isdir(output_dir):
+    os.makedirs(output_dir)
 
-# Initialize vote count dictionary
-candidate_votes = defaultdict(int)
+#save the text file
+output_file = os.path.join(output_dir, 'election_results.txt')
 
-# Count votes
-for row in reader:
-    candidate_votes[row['Candidate']] += 1
+# keep the file open
+with open(file_path) as csvfile:
+    csvreader = csv.reader(csvfile)
+    # Read the header row
+    header = next(csvreader)
+    # search through each row
+    for row in csvreader:
+        total_votes += 1
+        candidate = row[2]
+        if candidate not in candidate_votes:
+            candidate_votes[candidate] = 1
+        else:
+            candidate_votes[candidate] += 1
 
-# Total number of votes
-total_votes = sum(candidate_votes.values())
+#the winner 
+winner = max(candidate_votes, key=candidate_votes.get)
 
-# Calculate percentage and determine winner
-max_votes = 0
-winner = ''
-for candidate, votes in candidate_votes.items():
-    if votes > max_votes:
-        max_votes = votes
-        winner = candidate
+#print the results
+with open(output_file, 'w') as txt_file:
+    # Function to write and print lines
+    def write_print(line):
+        print(line)
+        txt_file.write(line + "\n")
+    
+    write_print("Election Results")
+    write_print("-------------------------")
+    write_print(f"Total Votes: {total_votes}")
+    write_print("-------------------------")
+    
+    for candidate, votes in candidate_votes.items():
+        percentage = (votes / total_votes) * 100
+        write_print(f"{candidate}: {percentage:.3f}% ({votes})")
+    
+    write_print("-------------------------")
+    write_print(f"Winner: {winner}")
+    write_print("-------------------------")
 
-# Prepare the results
-results = []
-results.append("Election Results")
-results.append("-------------------------")
-results.append(f"Total Votes: {total_votes}")
-results.append("-------------------------")
-for candidate, votes in candidate_votes.items():
-    percentage = (votes / total_votes) * 100
-    results.append(f"{candidate}: {percentage:.3f}% ({votes})")
-results.append("-------------------------")
-results.append(f"Winner: {winner}")
-results.append("-------------------------")
-
-# Print the results to the terminal
-for line in results:
-    print(line)
-
-# Save the results to a text file
-with open('election_results.txt', 'w') as file:
-    for line in results:
-        file.write(f"{line}\n")
-
+# print the output to terminal
+with open(output_file, 'r') as readfile:
+    print(readfile.read())
